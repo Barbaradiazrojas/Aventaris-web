@@ -1,6 +1,6 @@
 <?php
 /**
- * C&M Logística y Transporte — procesador del formulario de cotización
+ * Aventaris — procesador del formulario de cotización
  *
  * Recibe el POST del formulario de index.html, valida los datos y los
  * envía por correo. Responde en JSON si la petición viene por fetch (JS)
@@ -10,9 +10,9 @@
 declare(strict_types=1);
 
 // ===================== CONFIGURACIÓN =====================
-const DESTINATARIO = 'contacto@cym.cl';       // casilla que recibe las cotizaciones
-const REMITENTE    = 'no-reply@cym.cl';       // debe existir en el mismo dominio del hosting
-const ASUNTO       = 'Nueva solicitud de cotización - Sitio web C&M';
+const DESTINATARIO = 'contacto@aventaris.cl';       // casilla que recibe las cotizaciones
+const REMITENTE    = 'no-reply@aventaris.cl';       // debe existir en el mismo dominio del hosting
+const ASUNTO       = 'Nueva solicitud de cotización - Sitio web Aventaris';
 const ESPERA_SEG   = 30;                      // tiempo mínimo entre envíos por visitante
 // =========================================================
 
@@ -75,14 +75,22 @@ $telefono    = campo('telefono', 20);
 $origen      = campo('origen', 200);
 $destino     = campo('destino', 200);
 $descripcion = campo_largo('descripcion', 2000);
+$servicio    = campo('servicio', 60);
+
+const SERVICIOS = [
+    'Transporte de pasajeros',
+    'Servicio de turismo',
+    'Transporte de carga',
+    'Asesoría en licitaciones',
+];
 
 // --- Validación ---
 $errores = [];
 if (mb_strlen($nombre) < 2)                              $errores[] = 'nombre';
 if (!preg_match('/^[0-9+\s().-]{8,20}$/', $telefono))    $errores[] = 'teléfono';
-if (mb_strlen($origen) < 3)                              $errores[] = 'dirección de origen';
-if (mb_strlen($destino) < 3)                             $errores[] = 'dirección de destino';
-if (mb_strlen($descripcion) < 3)                         $errores[] = 'descripción de la carga';
+if (mb_strlen($origen) < 3)                              $errores[] = 'origen';
+if (!in_array($servicio, SERVICIOS, true))               $errores[] = 'tipo de servicio';
+if (mb_strlen($descripcion) < 3)                         $errores[] = 'detalle de la solicitud';
 
 if ($errores) {
     responder(false, 'Revisa estos campos: ' . implode(', ', $errores) . '.', 422);
@@ -93,15 +101,16 @@ $cuerpo = "Nueva solicitud de cotización desde el sitio web\n"
         . "==================================================\n\n"
         . "Nombre:     {$nombre}\n"
         . "Teléfono:   {$telefono}\n"
+        . "Servicio:   {$servicio}\n"
         . "Origen:     {$origen}\n"
-        . "Destino:    {$destino}\n\n"
-        . "Descripción de la carga:\n{$descripcion}\n\n"
+        . 'Destino:    ' . ($destino !== '' ? $destino : '(no indicado)') . "\n\n"
+        . "Detalle:\n{$descripcion}\n\n"
         . "--------------------------------------------------\n"
         . 'Fecha: ' . date('d-m-Y H:i') . "\n"
         . 'IP:    ' . ($_SERVER['REMOTE_ADDR'] ?? 'desconocida') . "\n";
 
 $cabeceras = implode("\r\n", [
-    'From: C&M Web <' . REMITENTE . '>',
+    'From: Aventaris Web <' . REMITENTE . '>',
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: 8bit',
@@ -114,7 +123,7 @@ $enviado = mail(DESTINATARIO, $asunto, $cuerpo, $cabeceras, '-f' . REMITENTE);
 
 if ($enviado) {
     $_SESSION['ultimo_envio'] = time();
-    responder(true, '¡Solicitud enviada con éxito! Un coordinador de C&M se comunicará contigo en breve.');
+    responder(true, '¡Solicitud enviada con éxito! El equipo de Aventaris se comunicará contigo en breve.');
 }
 
-responder(false, 'No pudimos enviar tu solicitud. Escríbenos por WhatsApp o llámanos al +56 9 8765 4321.', 500);
+responder(false, 'No pudimos enviar tu solicitud. Escríbenos por WhatsApp o llámanos al +56 9 7900 8964.', 500);
