@@ -4,6 +4,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Aventaris | Transporte de pasajeros, turismo y carga en Chile</title>
+<link href="assets/logos/aventaris-icono.png" rel="icon" type="image/png"/>
+<link href="assets/logos/aventaris-icono.png" rel="apple-touch-icon"/>
 <meta content="Aventaris: transporte de pasajeros, servicios de turismo, transporte de carga y asesoría en licitaciones de transporte en todo Chile." name="description"/>
 
 <!-- Google Fonts: Plus Jakarta Sans & Inter -->
@@ -122,10 +124,9 @@
 <!-- ========================================== -->
 <header class="bg-surface-container-lowest dark:bg-primary-container text-primary dark:text-inverse-primary top-0 sticky z-50 shadow-sm dark:shadow-none border-b border-outline-variant/40">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
-    <!-- Logo (texto; reemplazar por <img src="logo-aventaris.png"> cuando esté el logo) -->
-    <a aria-label="Aventaris, ir al inicio" class="brand-wordmark text-primary active:scale-[0.98] transition-transform duration-100" href="#">
-      <span class="brand-mark"><span class="material-symbols-outlined icon-filled">explore</span></span>
-      <span>Aventaris</span>
+    <!-- Logo -->
+    <a aria-label="Aventaris, ir al inicio" class="flex items-center active:scale-[0.98] transition-transform duration-100" href="#">
+      <img alt="Aventaris" class="h-11 w-auto" src="assets/logos/aventaris-logo.png"/>
     </a>
 
     <!-- Desktop Navigation Links -->
@@ -440,6 +441,21 @@
             <span class="material-symbols-outlined text-xl">arrow_forward</span>
           </a>
         </div>
+
+        <!-- Credenciales para licitaciones públicas -->
+        <div class="pt-6 border-t border-on-primary/10 space-y-3">
+          <p class="font-label-sm text-label-sm text-on-primary-container tracking-wider">LICITACIONES PÚBLICAS</p>
+          <div class="flex flex-wrap items-stretch gap-3">
+            <div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-3 rounded-lg">
+              <img alt="Mercado Público - ChileCompra" class="h-9 w-auto" src="assets/logos/logo-chilecompra-original.png"/>
+              <span class="font-label-sm text-label-sm text-primary leading-tight">Licitaciones en<br/>Mercado Público</span>
+            </div>
+            <div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-3 rounded-lg">
+              <img alt="Sello Empresa Mujer" class="h-9 w-auto" src="assets/logos/ic_sello-mujer.png"/>
+              <span class="font-label-sm text-label-sm text-primary leading-tight">Empresa con<br/>Sello Mujer</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Tarjetas de detalle -->
@@ -654,13 +670,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-12 border-b border-on-primary/10">
       <!-- Logo and Brand Column -->
       <div class="lg:col-span-5 space-y-5">
-        <a aria-label="Aventaris, ir al inicio" class="brand-wordmark text-on-primary" href="#">
-          <span class="brand-mark"><span class="material-symbols-outlined icon-filled">explore</span></span>
-          <span>Aventaris</span>
+        <a aria-label="Aventaris, ir al inicio" class="inline-flex bg-surface-container-lowest p-2.5 rounded-lg" href="#">
+          <img alt="Aventaris" class="h-10 w-auto" src="assets/logos/aventaris-logo.png"/>
         </a>
         <p class="font-body-sm text-body-sm text-on-primary-container dark:text-surface-variant max-w-sm">
           Transporte de pasajeros, servicios de turismo y transporte de carga en todo Chile. Además, asesoramos licitaciones de transporte de pasajeros y carga.
         </p>
+        <div class="inline-flex items-center gap-3 bg-surface-container-lowest pl-2 pr-4 py-2 rounded-lg">
+          <img alt="Sello Empresa Mujer" class="h-12 w-auto" src="assets/logos/ic_sello-mujer.png"/>
+          <span class="font-label-sm text-label-sm text-primary leading-tight">Empresa con<br/>Sello Mujer</span>
+        </div>
       </div>
 
       <!-- Contact Data Column -->

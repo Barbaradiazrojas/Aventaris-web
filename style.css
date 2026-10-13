@@ -80,33 +80,6 @@ button[type="submit"]:disabled {
   cursor: wait;
 }
 
-/* ---------- Logo de texto (hasta tener el logo en imagen) ---------- */
-.brand-wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800;
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-
-.brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.6rem;
-  background: #0051d5;
-  color: #ffffff;
-}
-
-.brand-mark .material-symbols-outlined {
-  font-size: 1.35rem;
-}
-
 /* ---------- Anclas bajo el menú fijo ---------- */
 /* Evita que el menú superior tape el título al saltar a una sección */
 section[id],
