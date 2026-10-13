@@ -1,129 +1,91 @@
-<?php
-/**
- * Aventaris — procesador del formulario de cotización
- *
- * Recibe el POST del formulario de index.html, valida los datos y los
- * envía por correo. Responde en JSON si la petición viene por fetch (JS)
- * o redirige de vuelta a index.html si el navegador no tiene JS.
- */
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php wp_title('|', true, 'right'); ?><?php bloginfo('name'); ?></title>
 
-declare(strict_types=1);
+    <!-- Favicon dinámico (Icono de la pestaña del navegador) -->
+    <link rel="icon" type="image/png" href="<?php echo get_template_directory_uri(); ?>/assets/logos/aventaris-icono.png">
+    <link rel="apple-touch-icon" href="<?php echo get_template_directory_uri(); ?>/assets/logos/aventaris-icono.png">
 
-// ===================== CONFIGURACIÓN =====================
-const DESTINATARIO = 'contacto@aventaris.cl';       // casilla que recibe las cotizaciones
-const REMITENTE    = 'no-reply@aventaris.cl';       // debe existir en el mismo dominio del hosting
-const ASUNTO       = 'Nueva solicitud de cotización - Sitio web Aventaris';
-const ESPERA_SEG   = 30;                      // tiempo mínimo entre envíos por visitante
-// =========================================================
+    <!-- Carga de la hoja de estilo principal de WordPress -->
+    <link rel="stylesheet" href="<?php echo esc_url(get_stylesheet_uri()); ?>">
 
-date_default_timezone_set('America/Santiago');
-session_start();
+    <?php wp_head(); ?>
+</head>
+<body <?php body_class(); ?>>
 
-function es_ajax(): bool
-{
-    return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
-}
+    <!-- Cabecera con Logo Principal -->
+    <header class="site-header">
+        <div class="logo-container">
+            <a href="<?php echo esc_url(home_url('/')); ?>">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/logos/aventaris-logo.png" alt="Aventaris Logo" class="main-logo">
+            </a>
+        </div>
+    </header>
 
-function responder(bool $ok, string $mensaje, int $codigo = 200): void
-{
-    if (es_ajax()) {
-        http_response_code($codigo);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['ok' => $ok, 'mensaje' => $mensaje], JSON_UNESCAPED_UNICODE);
-    } else {
-        header('Location: index.html?estado=' . ($ok ? 'ok' : 'error') . '#cotizar', true, 303);
-    }
-    exit;
-}
+    <main class="site-content">
+        <!-- Sección de Cotización -->
+        <section id="cotizar" class="quote-section">
+            <h2>Solicita tu Cotización</h2>
 
-/** Limpia un campo de una línea (sin saltos para evitar inyección de cabeceras). */
-function campo(string $clave, int $max): string
-{
-    $valor = trim((string) ($_POST[$clave] ?? ''));
-    $valor = preg_replace('/[\r\n\t]+/', ' ', $valor) ?? '';
-    return mb_substr($valor, 0, $max);
-}
+            <form action="<?php echo get_template_directory_uri(); ?>/procesar-cotizacion.php" method="POST" id="form-cotizacion">
+                <!-- Campo trampa Anti-Spam (Honeypot) -->
+                <div style="display:none;">
+                    <input type="text" name="sitio_web" tabindex="-1" autocomplete="off">
+                </div>
 
-/** Limpia un campo de texto largo (permite saltos de línea). */
-function campo_largo(string $clave, int $max): string
-{
-    $valor = trim((string) ($_POST[$clave] ?? ''));
-    $valor = str_replace("\r\n", "\n", $valor);
-    return mb_substr($valor, 0, $max);
-}
+                <div class="form-group">
+                    <label for="nombre">Nombre completo *</label>
+                    <input type="text" id="nombre" name="nombre" required maxlength="100">
+                </div>
 
-// --- Solo se aceptan envíos POST; si alguien abre index.php, vuelve a la landing ---
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: index.html', true, 302);
-    exit;
-}
+                <div class="form-group">
+                    <label for="telefono">Teléfono *</label>
+                    <input type="tel" id="telefono" name="telefono" required maxlength="20">
+                </div>
 
-// --- Anti-spam 1: campo trampa. Si viene lleno, es un bot: fingimos éxito y no enviamos ---
-if (!empty($_POST['sitio_web'])) {
-    responder(true, '¡Solicitud enviada con éxito! Te contactaremos en breve.');
-}
+                <div class="form-group">
+                    <label for="servicio">Tipo de Servicio *</label>
+                    <select id="servicio" name="servicio" required>
+                        <option value="">Selecciona un servicio</option>
+                        <option value="Transporte de pasajeros">Transporte de pasajeros</option>
+                        <option value="Servicio de turismo">Servicio de turismo</option>
+                        <option value="Transporte de carga">Transporte de carga</option>
+                        <option value="Asesoría en licitaciones">Asesoría en licitaciones</option>
+                    </select>
+                </div>
 
-// --- Anti-spam 2: límite de frecuencia por sesión ---
-$ultimo = $_SESSION['ultimo_envio'] ?? 0;
-if (time() - $ultimo < ESPERA_SEG) {
-    responder(false, 'Ya recibimos una solicitud hace un momento. Espera unos segundos antes de enviar otra.', 429);
-}
+                <div class="form-group">
+                    <label for="origen">Origen *</label>
+                    <input type="text" id="origen" name="origen" required maxlength="200">
+                </div>
 
-// --- Datos del formulario ---
-$nombre      = campo('nombre', 100);
-$telefono    = campo('telefono', 20);
-$origen      = campo('origen', 200);
-$destino     = campo('destino', 200);
-$descripcion = campo_largo('descripcion', 2000);
-$servicio    = campo('servicio', 60);
+                <div class="form-group">
+                    <label for="destino">Destino (Opcional)</label>
+                    <input type="text" id="destino" name="destino" maxlength="200">
+                </div>
 
-const SERVICIOS = [
-    'Transporte de pasajeros',
-    'Servicio de turismo',
-    'Transporte de carga',
-    'Asesoría en licitaciones',
-];
+                <div class="form-group">
+                    <label for="descripcion">Detalle de la solicitud *</label>
+                    <textarea id="descripcion" name="descripcion" rows="4" required maxlength="2000"></textarea>
+                </div>
 
-// --- Validación ---
-$errores = [];
-if (mb_strlen($nombre) < 2)                              $errores[] = 'nombre';
-if (!preg_match('/^[0-9+\s().-]{8,20}$/', $telefono))    $errores[] = 'teléfono';
-if (mb_strlen($origen) < 3)                              $errores[] = 'origen';
-if (!in_array($servicio, SERVICIOS, true))               $errores[] = 'tipo de servicio';
-if (mb_strlen($descripcion) < 3)                         $errores[] = 'detalle de la solicitud';
+                <button type="submit" class="btn-submit">Enviar Cotización</button>
+            </form>
+        </section>
+    </main>
 
-if ($errores) {
-    responder(false, 'Revisa estos campos: ' . implode(', ', $errores) . '.', 422);
-}
+    <!-- Pie de página con Sellos e Insignias -->
+    <footer class="site-footer">
+        <div class="badges-container">
+            <img src="<?php echo get_template_directory_uri(); ?>/assets/logos/logo-chilecompra-original.png" alt="ChileCompra Mercado Público" class="badge-img">
+            <img src="<?php echo get_template_directory_uri(); ?>/assets/logos/ic_sello-mujer.png" alt="Sello Empresa Mujer" class="badge-img">
+        </div>
+        <p>&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. Todos los derechos reservados.</p>
+    </footer>
 
-// --- Armado del correo ---
-$cuerpo = "Nueva solicitud de cotización desde el sitio web\n"
-        . "==================================================\n\n"
-        . "Nombre:     {$nombre}\n"
-        . "Teléfono:   {$telefono}\n"
-        . "Servicio:   {$servicio}\n"
-        . "Origen:     {$origen}\n"
-        . 'Destino:    ' . ($destino !== '' ? $destino : '(no indicado)') . "\n\n"
-        . "Detalle:\n{$descripcion}\n\n"
-        . "--------------------------------------------------\n"
-        . 'Fecha: ' . date('d-m-Y H:i') . "\n"
-        . 'IP:    ' . ($_SERVER['REMOTE_ADDR'] ?? 'desconocida') . "\n";
-
-$cabeceras = implode("\r\n", [
-    'From: Aventaris Web <' . REMITENTE . '>',
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-    'X-Mailer: PHP/' . phpversion(),
-]);
-
-$asunto = '=?UTF-8?B?' . base64_encode(ASUNTO) . '?=';
-
-$enviado = mail(DESTINATARIO, $asunto, $cuerpo, $cabeceras, '-f' . REMITENTE);
-
-if ($enviado) {
-    $_SESSION['ultimo_envio'] = time();
-    responder(true, '¡Solicitud enviada con éxito! El equipo de Aventaris se comunicará contigo en breve.');
-}
-
-responder(false, 'No pudimos enviar tu solicitud. Escríbenos por WhatsApp o llámanos al +56 9 7900 8964.', 500);
+    <?php wp_footer(); ?>
+</body>
+</html>
